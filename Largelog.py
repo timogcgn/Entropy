@@ -2,7 +2,7 @@
 
 from math import log, isfinite
 
-def truelog(x, base=2):
+def largelog(x, base=2):
     if x==0:
         return -float('inf')
     remember_x=x
