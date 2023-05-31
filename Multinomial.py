@@ -1,4 +1,4 @@
-# Multinomial coefficient and
+# Multinomial coefficient and the multiplicity of a vector, i.e. the amount of unsigned permutations
 
 from scipy.special import comb
 
