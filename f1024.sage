@@ -1,3 +1,17 @@
+# load all relevant packages and code
+
+load('Falcon_stuff.sage')
+load('New_Falcon_stuff.sage')
+load('CBD_stuff.sage')
+
+import gc
+
+from Entropy_stuff import *
+from Multinomial import *
+from Largelog import *
+from Root_sum import approx_sum_of_roots
+from Compact_Dictionary import *
+
 import gc
 
 from Entropy_stuff import *
@@ -172,10 +186,10 @@ class distribution:
             self.make_raw_data_no_aborts(low_n, high_n, c=c, delete_after=delete_after, step=step, if_parallel=if_parallel)
             
     
-#    @parallel(4)
+    @parallel(256)
     def single_raw_data(self, n, c=0, delete_after=False, step=1, aborts=True):
-        print("n epsilon coresize Eclassic Equantum")
-        # single_raw_data returns the success probability and complexities for all n in the range of [low_n, high_n]
+        
+        # raw_data returns the success probability and complexities for all n in the range of [low_n, high_n]
         # in a csv-style table.
         
         # If aborts = True, the table is composed based on data from partial compact distionaries. This is faster,
@@ -183,7 +197,47 @@ class distribution:
         
         # If aborts = False, both expected data for KeyGuess and AbortedKeyGuess will be displayed, at the cost of
         # a significant runtime increase. Not recommended for wide distributions (like Falcon)
-        self.raw_data(n, n, c=0, delete_after=False, step=1, aborts=True, if_parallel=True)
+        if aborts:
+            L=self.par_comp_dic(n, c=c, if_ret=True, if_print=False)
+            p=0
+            count=0
+            ET=0
+            Equantum=0
+            for l in L.dic:
+                p+=l[1]*l[2]
+                ET+=l[1]*l[2]*(count+(l[2]+1)/2)
+                Equantum+=l[1]*approx_sum_of_roots(count+1,count+l[2])
+                count+=l[2]
+            ET+=(1-p)*count
+            return(n,format(float(p),'f'),largelog(count),largelog(ET),largelog(Equantum))
+            if delete_after:
+                del(self.comp_dics[n])
+                gc.collect()
+        else:
+            L=self.comp_dic(n, if_ret=True, if_print=False)
+            p1=0
+            p2=0
+            count1=0
+            count2=0
+            ET1=0
+            ET2=0
+            Equantum=0
+            for l in L.dic:
+                if largelog(l[1])>=-self.entropy*n-c:
+                    p1+=l[1]*l[2]
+                    ET1+=l[1]*l[2]*(count1+(l[2]+1)/2)
+                    Equantum+=l[1]*approx_sum_of_roots(count1+1,count1+l[2])
+                    count1+=l[2]
+#                else:
+#                    ELZ1+=(1-p1)*l[2]
+                p2+=l[1]*l[2]
+                ET2+=l[1]*l[2]*(count2+(l[2]+1)/2)
+                count2+=l[2]
+            ET1+=(1-p1)*count1
+            print(n,format(float(p1),'f'),largelog(count1),largelog(ET1),largelog(ET2),largelog(Equantum))
+            if delete_after:
+                del(self.comp_dics[n])
+                gc.collect()
     
     def make_raw_data(self, low_n, high_n, c=0, delete_after=False, step=1, if_parallel=False):
         if if_parallel==False:
@@ -254,3 +308,41 @@ class distribution:
         if ret_l:
             return largelog(out)
         return out
+    
+def create_falcon_dist(sigma, denominator_goodness_ratio=2**(-7), nosamples=2**20, goodness_limit=0.997):
+    # step 1: find an upper bound b_0 for the denominator of p_i (i.e. the sum of all exp(-j^2/(2*sigma^2)) ) that is in very close proximity
+    
+    b_0=0
+    denominator_old=1
+    denominator_new=1
+    while denominator_new/denominator_old>denominator_goodness_ratio:
+        denominator_old=denominator_new
+        b_0+=1
+        denominator_new=exp(-(b_0)^2/(2*sigma^2))
+    denominator=0
+    for i in range(-b_0,b_0+1):
+        denominator+=exp(-i^2/(2*sigma^2))
+    
+    # step 2: find an upper bound b_1 such that sampling nosamples many coefficients according to our approximate FALCON distribution would return only return elements that are absolute smaller than b_1
+    b_1=0
+    p=1/denominator
+    while p^nosamples<goodness_limit:
+        b_1+=1
+        p+=2*exp(-(b_1)^2/(2*sigma^2))/denominator
+    
+    # step 3: calculate actual denominator for truncated distribution
+    true_denominator=1
+    for i in range(1,b_1+1):
+        true_denominator+=2*exp(-i^2/(2*sigma^2))
+    
+    # step 4: create distribution
+    dist={}
+    for i in range(-b_1,b_1+1):
+        dist[i]=exp(-i^2/(2*sigma^2))/true_denominator
+    return distribution(dist)
+    
+f1024=create_falcon_dist(falcon1024_sigma,denominator_goodness_ratio=2**(-10))
+
+print("n epsilon coresize Eclassic Equantum")
+for _,data in f1024.single_raw_data(list(range(1,51))):
+    print(data[0], data[1], data[2], data[3], data[4])
