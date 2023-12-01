@@ -149,7 +149,7 @@ class distribution:
     
     ### TABLE FUNCTIONS ###
     
-    def raw_data(self, low_n, high_n, c=0, delete_after=False, step=1, aborts=True, if_parallel=False):
+    def raw_data(self, low_n, high_n, c=0, delete_after=False, step=1, aborts=True):
         # raw_data returns the success probability and complexities for all n in the range of [low_n, high_n]
         # in a csv-style table.
         
@@ -161,10 +161,9 @@ class distribution:
         if aborts:
             self.make_raw_data(low_n, high_n, c=c, delete_after=delete_after, step=step)
         else:
-            self.make_raw_data_no_aborts(low_n, high_n, c=c, delete_after=delete_after, step=step, if_parallel=if_parallel)
+            self.make_raw_data_no_aborts(low_n, high_n, c=c, delete_after=delete_after, step=step)
             
     
-    @parallel(256)
     def single_raw_data(self, n, c=0, delete_after=False, step=1, aborts=True):
         
         # raw_data returns the success probability and complexities for all n in the range of [low_n, high_n]
@@ -217,9 +216,8 @@ class distribution:
                 del(self.comp_dics[n])
                 gc.collect()
     
-    def make_raw_data(self, low_n, high_n, c=0, delete_after=False, step=1, if_parallel=False):
-        if if_parallel==False:
-            print("n epsilon coresize Eclassic Equantum")
+    def make_raw_data(self, low_n, high_n, c=0, delete_after=False, step=1):
+        print("n epsilon coresize Eclassic Equantum")
         for n in range(low_n, high_n+1, step):
             L=self.par_comp_dic(n, c=c, if_ret=True, if_print=False)
             p=0
@@ -453,7 +451,6 @@ class func_distribution:
         self.make_raw_data(low_n, high_n, c=c, delete_after=delete_after, step=step)
             
     
-    @parallel(256)
     def single_raw_data(self, n, c=0, delete_after=False, step=1):
         
         # single_raw_data returns the success probability and complexities for a single n in a csv-style table.
@@ -476,9 +473,8 @@ class func_distribution:
             gc.collect()
 
     
-    def make_raw_data(self, low_n, high_n, c=0, delete_after=False, step=1, if_parallel=False):
-        if if_parallel==False:
-            print("n epsilon coresize Eclassic Equantum")
+    def make_raw_data(self, low_n, high_n, c=0, delete_after=False, step=1):
+        print("n epsilon coresize Eclassic Equantum")
         for n in range(low_n, high_n+1, step):
             L=self.par_comp_dic(n, c=c, if_ret=True, if_print=False)
             p=0

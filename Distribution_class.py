@@ -157,7 +157,7 @@ class distribution:
     
     ### TABLE FUNCTIONS ###
     
-    def raw_data(self, low_n, high_n, c=0, delete_after=False, step=1, aborts=True, if_parallel=False):
+    def raw_data(self, low_n, high_n, c=0, delete_after=False, step=1, aborts=True):
         # raw_data returns the success probability and complexities for all n in the range of [low_n, high_n]
         # in a csv-style table.
         
@@ -169,13 +169,12 @@ class distribution:
         if aborts:
             self.make_raw_data(low_n, high_n, c=c, delete_after=delete_after, step=step)
         else:
-            self.make_raw_data_no_aborts(low_n, high_n, c=c, delete_after=delete_after, step=step, if_parallel=if_parallel)
+            self.make_raw_data_no_aborts(low_n, high_n, c=c, delete_after=delete_after, step=step)
             
     
-#    @parallel(4)
     def single_raw_data(self, n, c=0, delete_after=False, step=1, aborts=True):
-        print("n epsilon coresize Eclassic Equantum")
-        # single_raw_data returns the success probability and complexities for all n in the range of [low_n, high_n]
+        
+        # raw_data returns the success probability and complexities for all n in the range of [low_n, high_n]
         # in a csv-style table.
         
         # If aborts = True, the table is composed based on data from partial compact distionaries. This is faster,
@@ -183,11 +182,50 @@ class distribution:
         
         # If aborts = False, both expected data for KeyGuess and AbortedKeyGuess will be displayed, at the cost of
         # a significant runtime increase. Not recommended for wide distributions (like Falcon)
-        self.raw_data(n, n, c=0, delete_after=False, step=1, aborts=True, if_parallel=True)
+        if aborts:
+            L=self.par_comp_dic(n, c=c, if_ret=True, if_print=False)
+            p=0
+            count=0
+            ET=0
+            Equantum=0
+            for l in L.dic:
+                p+=l[1]*l[2]
+                ET+=l[1]*l[2]*(count+(l[2]+1)/2)
+                Equantum+=l[1]*approx_sum_of_roots(count+1,count+l[2])
+                count+=l[2]
+            ET+=(1-p)*count
+            return(n,format(float(p),'f'),largelog(count),largelog(ET),largelog(Equantum))
+            if delete_after:
+                del(self.comp_dics[n])
+                gc.collect()
+        else:
+            L=self.comp_dic(n, if_ret=True, if_print=False)
+            p1=0
+            p2=0
+            count1=0
+            count2=0
+            ET1=0
+            ET2=0
+            Equantum=0
+            for l in L.dic:
+                if largelog(l[1])>=-self.entropy*n-c:
+                    p1+=l[1]*l[2]
+                    ET1+=l[1]*l[2]*(count1+(l[2]+1)/2)
+                    Equantum+=l[1]*approx_sum_of_roots(count1+1,count1+l[2])
+                    count1+=l[2]
+#                else:
+#                    ELZ1+=(1-p1)*l[2]
+                p2+=l[1]*l[2]
+                ET2+=l[1]*l[2]*(count2+(l[2]+1)/2)
+                count2+=l[2]
+            ET1+=(1-p1)*count1
+            print(n,format(float(p1),'f'),largelog(count1),largelog(ET1),largelog(ET2),largelog(Equantum))
+            if delete_after:
+                del(self.comp_dics[n])
+                gc.collect()
     
-    def make_raw_data(self, low_n, high_n, c=0, delete_after=False, step=1, if_parallel=False):
-        if if_parallel==False:
-            print("n epsilon coresize Eclassic Equantum")
+    def make_raw_data(self, low_n, high_n, c=0, delete_after=False, step=1):
+        print("n epsilon coresize Eclassic Equantum")
         for n in range(low_n, high_n+1, step):
             L=self.par_comp_dic(n, c=c, if_ret=True, if_print=False)
             p=0
