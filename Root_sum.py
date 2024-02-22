@@ -1,6 +1,8 @@
 #approx_sum_of_roots returns the sum of sqrt(x) for all x in the interval [a,b]. If b-a>=200, we approximate this sum with an integral approach instead
 
 def true_sum_of_roots(a, b):
+    if b<a:
+        return 0
     s=0
     for i in range(a, b+1):
         s+=i**(1/2)

@@ -53,4 +53,7 @@ def distribution_falcon(i, params, denominator_goodness_ratio=2**(-10)):
     denominator=falcon_denominator[sigma][1]
     
     #Step 2: calculate probability of sampling i
-    return exp(-i^2/(2*sigma^2))/denominator
+    return exp(-(i^2)/(2*sigma^2))/denominator
+
+falcon512dist=func_distribution("D(4.06)", distribution_falcon, [falcon512_sigma], ["sigma"])
+falcon1024dist=func_distribution("D(2.87)", distribution_falcon, [falcon1024_sigma], ["sigma"])

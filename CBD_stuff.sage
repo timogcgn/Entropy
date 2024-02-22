@@ -1,4 +1,4 @@
-from Distribution_class import *
+load('Distribution_Classes.sage')
 from Convolution_stuff import *
             
             
